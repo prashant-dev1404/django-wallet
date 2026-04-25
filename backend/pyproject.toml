@@ -1,0 +1,32 @@
+# pyproject.toml
+
+[project]
+name = "playto-payout"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "django~=5.0",
+    "djangorestframework",
+    "django-environ",
+    "psycopg[binary]",
+    "django-q2",
+    "django-cors-headers",
+    "gunicorn",
+    "whitenoise",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-django",
+    "factory-boy",
+    "ruff",
+]
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "playto.settings"
+python_files = ["test_*.py"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"

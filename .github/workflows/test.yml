@@ -1,0 +1,69 @@
+# .github/workflows/test.yml
+#
+# CI: runs the test suite on every push and pull request.
+# Tells the reviewer the tests actually pass without them having to set up
+# the project.
+#
+# TODO when implementing:
+#
+# name: Tests
+#
+# on:
+#   push:
+#     branches: [main]
+#   pull_request:
+#
+# jobs:
+#   backend-tests:
+#     runs-on: ubuntu-latest
+#
+#     services:
+#       postgres:
+#         image: postgres:16-alpine
+#         env:
+#           POSTGRES_DB: playto_test
+#           POSTGRES_USER: playto
+#           POSTGRES_PASSWORD: playto
+#         ports:
+#           - 5432:5432
+#         options: >-
+#           --health-cmd pg_isready
+#           --health-interval 10s
+#           --health-timeout 5s
+#           --health-retries 5
+#
+#     steps:
+#       - uses: actions/checkout@v4
+#
+#       - name: Install uv
+#         uses: astral-sh/setup-uv@v3
+#
+#       - name: Set up Python
+#         run: uv python install 3.12
+#
+#       - name: Install dependencies
+#         working-directory: backend
+#         run: uv sync --frozen
+#
+#       - name: Run linter
+#         working-directory: backend
+#         run: uv run ruff check .
+#
+#       - name: Run tests
+#         working-directory: backend
+#         env:
+#           DATABASE_URL: postgres://playto:playto@localhost:5432/playto_test
+#           DJANGO_SECRET_KEY: ci-secret-key
+#           DJANGO_DEBUG: "False"
+#           DJANGO_ALLOWED_HOSTS: localhost
+#         run: uv run pytest -v
+#
+#       - name: Run concurrency test 5 times
+#         working-directory: backend
+#         env: <same>
+#         run: |
+#           for i in 1 2 3 4 5; do
+#             uv run pytest payouts/tests/test_concurrency.py -v
+#           done
+#         # Stability check — concurrency tests should pass deterministically.
+#         # If this loop ever fails, the lock implementation is wrong.
