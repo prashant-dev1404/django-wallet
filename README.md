@@ -8,12 +8,13 @@ A production-grade payout engine built for the Playto Founding Engineer Challeng
 
 | Service | URL |
 |---|---|
-| Frontend | https://django-wallet-ldkgdreld-godhunt69s-projects.vercel.app |
+| Frontend | https://django-wallet-fbxh7snwf-godhunt69s-projects.vercel.app/ |
 | Backend API | https://django-wallet-production.up.railway.app/api/v1/{REQUEST} |
 
 ---
 
 ## Screenshots
+
 
 ### Dashboard — Balance & Payout Form
 ![Dashboard](docs/screenshots/dashboard.png)

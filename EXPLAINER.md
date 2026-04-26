@@ -35,6 +35,7 @@ The cost is an O(n) scan per balance read. At this scale this is irrelevant; if 
 
 ## 2. The Lock
 
+
 **Two concurrent payouts cannot overdraw the balance because the second one blocks at the database.**
 
 The naive failure mode: two requests arrive at the same millisecond, both read ₹100, both decide ₹60 is fine, both create a ₹60 hold. Merchant is overdrawn by ₹20. `transaction.atomic()` does not prevent this — at PostgreSQL's default `READ COMMITTED` isolation, two transactions can read the same ledger state simultaneously.
@@ -175,7 +176,7 @@ It is wrong. PostgreSQL's default isolation level is `READ COMMITTED`, which per
 I caught this by writing the concurrency test first (`Barrier(2)` with two threads each attempting the same withdrawal). The test failed deterministically — two payouts, balance negative.
 
 ### Test Script
-![Test Script](docs/screenshots/test.png)
+![Test Script](docs/screenshots/tests.png)
 
 The fix:
 
