@@ -4,7 +4,7 @@ dockerfilePath = "Dockerfile"
 
 [deploy]
 preDeployCommand = "python manage.py migrate"
-startCommand = "sh -c 'python manage.py seed && python manage.py setup_schedules && python manage.py collectstatic --noinput && gunicorn playto.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60'"
+startCommand = "sh -c 'if [ \"$WORKER\" = \"true\" ]; then python manage.py qcluster; else python manage.py seed && python manage.py setup_schedules && python manage.py collectstatic --noinput && gunicorn playto.wsgi:application --bind 0.0.0.0:$PORT --workers 2 --timeout 60; fi'"
 healthcheckPath = "/api/v1/merchants"
 healthcheckTimeout = 60
 restartPolicyType = "ON_FAILURE"
