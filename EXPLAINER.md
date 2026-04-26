@@ -29,7 +29,7 @@ Every customer payment, payout hold, and refund is a row in `LedgerEntry`. The t
 
 A stored balance can drift from reality after a partial failure. A derived balance cannot. The database does the math (no Python-side arithmetic between read and write), and money is stored as `BigIntegerField` paise — `1050`, never `10.50` — so floating-point precision and decimal rounding are non-problems by construction.
 
-The cost is an O(n) scan per balance read. At Playto's scale this is irrelevant; if it ever became one, a periodic snapshot row would cap the scan length without changing the model.
+The cost is an O(n) scan per balance read. At this scale this is irrelevant; if it ever became one, a periodic snapshot row would cap the scan length without changing the model.
 
 ---
 
@@ -173,6 +173,9 @@ This looks correct. It's wrapped in a transaction. The balance check precedes th
 It is wrong. PostgreSQL's default isolation level is `READ COMMITTED`, which permits two transactions to read the same ledger state concurrently. Two simultaneous ₹60 payout requests against a ₹100 balance would both see ₹100, both pass the check, both create a ₹60 hold. The merchant goes to ₹-20. The atomicity of `transaction.atomic()` guarantees nothing about reads — it only ensures the *write* is all-or-nothing.
 
 I caught this by writing the concurrency test first (`Barrier(2)` with two threads each attempting the same withdrawal). The test failed deterministically — two payouts, balance negative.
+
+### Test Script
+![Test Script](docs/screenshots/test.png)
 
 The fix:
 

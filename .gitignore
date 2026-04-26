@@ -78,4 +78,5 @@ ai-audit-notes.md
 CLAUDE.md
 
 # Internal project documentation — not part of the submission
-docs/
+docs/*
+!docs/screenshots/
