@@ -186,7 +186,49 @@ $env:DATABASE_URL="postgres://playto:playto@localhost:5432/playto"; 1..10 | ForE
 
 ---
 
-## Architecture notes
+## How it works
+
+The backend is split into three separated concerns, each with its own Django app:
+
+```
+POST /api/v1/payouts
+        │
+        ▼
+┌─────────────────┐     ┌──────────────────┐
+│  idempotency/   │────▶│    payouts/       │
+│  Reject dupes   │     │  create_payout()  │
+│  before any     │     │  - lock ledger    │
+│  business logic │     │  - check balance  │
+└─────────────────┘     │  - write DEBIT    │
+                        │  - status=PENDING │
+                        └────────┬─────────┘
+                                 │
+                        ┌────────▼─────────┐
+                        │    ledger/        │
+                        │  LedgerEntry      │
+                        │  append-only      │
+                        │  balance derived  │
+                        │  never stored     │
+                        └────────┬─────────┘
+                                 │
+                    (separate Railway service)
+                                 │
+                        ┌────────▼─────────┐
+                        │  Django-Q Worker  │
+                        │  qcluster polls  │
+                        │  every 30s        │
+                        │  - pick PENDING   │
+                        │  - simulate bank  │
+                        │  - COMPLETED or   │
+                        │    FAILED+REFUND  │
+                        └──────────────────┘
+```
+
+**Web service** (gunicorn) handles all HTTP requests — balance reads, payout creation, idempotency enforcement. It never processes payouts itself.
+
+**Worker service** (Django-Q qcluster) runs as a completely separate Railway process. It polls the database every 30 seconds, picks up `PENDING` payouts, calls the simulated bank, and settles the outcome. If it crashes, Railway restarts it and pending payouts are picked up on the next poll — no money is lost.
+
+**Ledger** is the single source of truth. Balance is never cached or stored — it's always recomputed from the sum of ledger entries. A `PAYOUT_HOLD` debit is written the moment a payout is created. A `PAYOUT_REFUND` credit is written if it fails. Completed payouts leave the hold permanent.
 
 See [EXPLAINER.md](EXPLAINER.md) for the five decisions that matter:
 
