@@ -11,7 +11,7 @@ export default function PayoutHistoryTable({ merchantId, refreshTrigger }) {
   function fetchPayouts() {
     if (document.hidden) return
     listPayouts(merchantId)
-      .then((data) => { setPayouts(data.payouts); setError(null) })
+      .then((data) => { setPayouts(data?.payouts ?? []); setError(null) })
       .catch((e) => setError(e.message))
   }
 

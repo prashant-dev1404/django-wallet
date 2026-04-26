@@ -15,9 +15,10 @@ export default function App() {
   useEffect(() => {
     getMerchants()
       .then((data) => {
-        setMerchants(data)
-        if (!merchantId && data.length > 0) {
-          const first = data[0].id
+        const list = Array.isArray(data) ? data : []
+        setMerchants(list)
+        if (!merchantId && list.length > 0) {
+          const first = list[0].id
           setMerchantId(first)
           localStorage.setItem('merchantId', first)
         }

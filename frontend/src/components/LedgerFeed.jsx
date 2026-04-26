@@ -21,8 +21,9 @@ export default function LedgerFeed({ merchantId, refreshTrigger }) {
     if (document.hidden) return
     getLedger(merchantId, { limit: 25, offset: currentOffset })
       .then((data) => {
-        setEntries(currentOffset === 0 ? data.entries : (prev) => [...prev, ...data.entries])
-        setTotal(data.total_count)
+        const newEntries = data?.entries ?? []
+        setEntries(currentOffset === 0 ? newEntries : (prev) => [...prev, ...newEntries])
+        setTotal(data?.total_count ?? 0)
         setError(null)
       })
       .catch((e) => setError(e.message))
