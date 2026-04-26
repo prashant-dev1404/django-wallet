@@ -230,6 +230,7 @@ POST /api/v1/payouts
 
 **Ledger** is the single source of truth. Balance is never cached or stored — it's always recomputed from the sum of ledger entries. A `PAYOUT_HOLD` debit is written the moment a payout is created. A `PAYOUT_REFUND` credit is written if it fails. Completed payouts leave the hold permanent.
 
+
 See [EXPLAINER.md](EXPLAINER.md) for the five decisions that matter:
 
 1. **Ledger** — balance derived by `Sum(Case(...))` aggregation, never stored
