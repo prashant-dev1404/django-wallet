@@ -13,8 +13,11 @@ export default function App() {
   const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   useEffect(() => {
+    console.log('[App] API URL:', import.meta.env.VITE_API_URL)
+    console.log('[App] fetching merchants...')
     getMerchants()
       .then((data) => {
+        console.log('[App] merchants response:', data)
         const list = Array.isArray(data) ? data : []
         setMerchants(list)
         if (!merchantId && list.length > 0) {
@@ -23,7 +26,9 @@ export default function App() {
           localStorage.setItem('merchantId', first)
         }
       })
-      .catch(console.error)
+      .catch((err) => {
+        console.error('[App] merchants fetch failed:', err)
+      })
   }, [])
 
   function handleMerchantChange(e) {
