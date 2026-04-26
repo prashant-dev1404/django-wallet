@@ -73,3 +73,9 @@ ai-audit-notes.md
 
 # Local docker volume mount for postgres data
 .postgres-data/
+
+# AI agent instructions — internal, not part of the submission
+CLAUDE.md
+
+# Internal project documentation — not part of the submission
+docs/

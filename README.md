@@ -1,28 +1,194 @@
 # Playto Pay — Payout Engine
 
-A submission for the Playto Founding Engineer Challenge 2026.
-
-> **Status:** scaffolding stage. Implementation plan in `PRD.md`. AI agent rules in `CLAUDE.md`.
+A production-grade payout engine built for the Playto Founding Engineer Challenge. Indian merchants accumulate balance from customer payments and withdraw to bank accounts. The system handles money integrity, concurrent requests, idempotency, and state-machine-driven payout processing.
 
 ---
 
-## TODO when implementing this README
+## Stack
 
-Replace this section with:
+| Layer | Choice |
+|---|---|
+| Backend | Django 5.2 + Django REST Framework |
+| Database | PostgreSQL 16 |
+| Background jobs | Django-Q2 (PostgreSQL ORM broker — no Redis) |
+| Frontend | React 18 + Vite + Tailwind CSS |
+| Local dev | Docker Compose |
 
-1. **One-paragraph description** of what the service does (merchant ledger + payout engine).
-2. **Stack summary** in a table (Django, DRF, PostgreSQL, Django-Q, React, Tailwind).
-3. **Local setup**:
-   - Prerequisites (Python 3.12+, Node 20+, Docker, PostgreSQL 15+)
-   - `docker-compose up -d` for Postgres
-   - Backend: `cd backend && uv sync && uv run python manage.py migrate && uv run python manage.py seed`
-   - Worker: `uv run python manage.py qcluster`
-   - Frontend: `cd frontend && npm install && npm run dev`
-4. **Environment variables** needed (`DATABASE_URL`, `DJANGO_SECRET_KEY`, `VITE_API_URL`, etc.)
-5. **Seeded test data** — list the 3 merchants and their starting balances, with example IDs the reviewer can paste into the dashboard merchant selector.
-6. **API examples** — one curl for `POST /api/v1/payouts` showing the `Idempotency-Key` header.
-7. **Running tests** — `uv run pytest`, plus a note that the concurrency test needs `--reuse-db` disabled.
-8. **Deployed URLs** — backend on Railway, frontend on Vercel.
-9. **Pointers** — link to `PRD.md` for design, `EXPLAINER.md` for the five answers.
+---
 
-Keep it tight. The reviewer is judging code quality, not README prose.
+## Local setup
+
+### Prerequisites
+
+- Docker Desktop (running)
+- Node.js 20+
+- Python 3.12+ with `uv` (`pip install uv`)
+
+### 1. Start backend + worker + database
+
+```bash
+docker compose up --build
+```
+
+This single command:
+- Starts PostgreSQL 16
+- Runs Django migrations
+- Seeds 3 test merchants with transaction history
+- Starts the Django development server on port 8000
+- Starts the Django-Q worker for background payout processing
+
+### 2. Start the frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+Open [http://localhost:5173](http://localhost:5173).
+
+That's it. Two terminals.
+
+---
+
+## Environment variables
+
+The backend reads these from `backend/.env` or the shell environment:
+
+| Variable | Default (dev) | Description |
+|---|---|---|
+| `DATABASE_URL` | `postgres://playto:playto@localhost:5432/playto` | PostgreSQL connection string |
+| `SECRET_KEY` | `dev-only-key-not-for-production` | Django secret key |
+| `DEBUG` | `True` | Django debug mode |
+| `ALLOWED_HOSTS` | `localhost,127.0.0.1` | Comma-separated allowed hosts |
+| `CORS_ALLOWED_ORIGINS` | `http://localhost:5173` | Comma-separated CORS origins |
+
+---
+
+## Seeded test data
+
+Three merchants are created on first run. Use the dropdown in the dashboard to switch between them.
+
+| Merchant | Email | Starting balance |
+|---|---|---|
+| Acme Design Studio | acme@test.local | ₹5,00,000 (5,00,00,000 paise) |
+| Bharat Freelancers Co | bharat@test.local | ₹1,25,000 (1,25,00,000 paise) |
+| Mango Tech LLP | mango@test.local | ₹2,000 (2,00,000 paise) |
+
+Each merchant has 2 bank accounts and a backdated credit history visible in the ledger feed.
+
+To find merchant and bank account UUIDs after seeding:
+
+```bash
+curl http://localhost:8000/api/v1/merchants
+```
+
+---
+
+## API quick reference
+
+All endpoints are prefixed `/api/v1/`. Authenticated endpoints require `X-Merchant-Id: <uuid>`.
+
+### Create a payout
+
+```bash
+curl -X POST http://localhost:8000/api/v1/payouts \
+  -H "Content-Type: application/json" \
+  -H "X-Merchant-Id: <merchant-uuid>" \
+  -H "Idempotency-Key: $(python -c 'import uuid; print(uuid.uuid4())')" \
+  -d '{"amount_paise": 10000, "bank_account_id": "<bank-account-uuid>"}'
+```
+
+### Get balance
+
+```bash
+curl -H "X-Merchant-Id: <merchant-uuid>" http://localhost:8000/api/v1/balance
+```
+
+### List payouts
+
+```bash
+curl -H "X-Merchant-Id: <merchant-uuid>" "http://localhost:8000/api/v1/payouts/list?limit=25&offset=0"
+```
+
+### List ledger entries
+
+```bash
+curl -H "X-Merchant-Id: <merchant-uuid>" "http://localhost:8000/api/v1/ledger?limit=25&offset=0"
+```
+
+---
+
+## Running tests
+
+Tests require a live PostgreSQL instance (no SQLite).
+
+```powershell
+# PowerShell
+$env:DATABASE_URL="postgres://playto:playto@localhost:5432/playto"; uv run pytest -v
+```
+
+```bash
+# bash/zsh
+DATABASE_URL=postgres://playto:playto@localhost:5432/playto uv run pytest -v
+```
+
+**24 tests across 4 modules:**
+
+| Module | Tests |
+|---|---|
+| `idempotency/tests/test_idempotency.py` | 6 — duplicate replay, body conflict, missing key, invalid UUID, in-flight, per-merchant scoping |
+| `ledger/tests/test_services.py` | 5 — empty balance, credit/debit math, append-only enforcement, lock requires transaction, field validation |
+| `payouts/tests/test_state_machine.py` | 12 — all allowed and forbidden transitions, terminal state enforcement, DB persistence |
+| `payouts/tests/test_concurrency.py` | 1 — two threads race to overdraw; exactly one succeeds |
+
+Run the concurrency test in a loop to confirm stability:
+
+```powershell
+$env:DATABASE_URL="postgres://playto:playto@localhost:5432/playto"; 1..10 | ForEach-Object { uv run pytest payouts/tests/test_concurrency.py -v }
+```
+
+---
+
+## Architecture notes
+
+See [EXPLAINER.md](EXPLAINER.md) for the five decisions that matter:
+
+1. **Ledger** — balance derived by `Sum(Case(...))` aggregation, never stored
+2. **Lock** — `SELECT FOR UPDATE` on ledger rows before balance check prevents overdraw
+3. **Idempotency** — database unique constraint, insert-first approach, in-flight detection
+4. **State machine** — all status writes through `transition_to()`, `FAILED`/`COMPLETED` are terminal
+5. **AI audit** — bugs generated by AI assistance, caught in review, and fixed
+
+See [PRD.md](../PRD.md) for full product requirements and design decisions.
+
+---
+
+## Project structure
+
+```
+playto-payout/
+├── backend/
+│   ├── manage.py
+│   ├── pyproject.toml          # uv dependency management
+│   ├── playto/                 # Django project (settings, urls, wsgi)
+│   ├── ledger/                 # Merchant, BankAccount, LedgerEntry models + services
+│   ├── payouts/                # Payout model, state machine, views, workers
+│   ├── idempotency/            # IdempotencyKey model + check/record service
+│   └── conftest.py             # pytest fixtures
+├── frontend/
+│   ├── src/
+│   │   ├── App.jsx             # Merchant selector, layout
+│   │   ├── api.js              # fetch wrapper with header injection
+│   │   ├── format.js           # paise→rupees, timestamp, status badge
+│   │   └── components/
+│   │       ├── BalanceCard.jsx       # 5s polling
+│   │       ├── PayoutForm.jsx        # payout creation with idempotency key
+│   │       ├── PayoutHistoryTable.jsx # 3s polling, click-to-expand
+│   │       └── LedgerFeed.jsx        # 5s polling, load-more pagination
+│   ├── vite.config.js
+│   └── tailwind.config.js
+├── docker-compose.yml
+├── README.md
+└── EXPLAINER.md
+```
