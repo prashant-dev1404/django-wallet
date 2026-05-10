@@ -1,0 +1,18 @@
+# Mirror of backend/pyproject.toml dependencies, flattened for tools that
+# expect a requirements.txt at the repo root (e.g. test-forge framework
+# detection, hosted CI without uv installed). Keep in sync with pyproject.toml.
+
+django~=5.0
+djangorestframework
+django-environ
+psycopg[binary]
+django-q2
+django-cors-headers
+gunicorn
+whitenoise
+
+# Dev / test
+pytest
+pytest-django
+factory-boy
+ruff

@@ -21,10 +21,10 @@ export function formatTimestamp(iso) {
 
 export function statusBadgeClasses(status) {
   const map = {
-    PENDING:    'bg-yellow-100 text-yellow-800',
-    PROCESSING: 'bg-blue-100 text-blue-800',
-    COMPLETED:  'bg-green-100 text-green-800',
-    FAILED:     'bg-red-100 text-red-800',
+    PENDING:    'bg-amber-500/10 text-amber-400',
+    PROCESSING: 'bg-blue-500/15 text-blue-300',
+    COMPLETED:  'bg-green-500/10 text-green-400',
+    FAILED:     'bg-red-500/10 text-red-400',
   }
-  return map[status] ?? 'bg-gray-100 text-gray-800'
+  return map[status] ?? 'bg-white/[0.05] text-white/35'
 }

@@ -42,16 +42,18 @@ export default function App() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4">
-        <h1 className="text-xl font-semibold text-gray-900">Playto Pay</h1>
+    <div className="min-h-screen bg-brand-bg font-sans">
+      <header className="bg-brand-surface border-b border-white/[0.08] px-6 py-4 flex items-center gap-4">
+        <h1 className="text-xl font-semibold text-white tracking-tight">
+          ✦ Playto Pay
+        </h1>
         <select
           value={merchantId}
           onChange={handleMerchantChange}
-          className="ml-auto border border-gray-300 rounded px-3 py-1.5 text-sm text-gray-700 bg-white"
+          className="ml-auto bg-brand-surface2 border border-white/[0.08] rounded-lg px-3 py-1.5 text-sm text-white/80 focus:outline-none focus:border-brand-accent"
         >
           {merchants.map((m) => (
-            <option key={m.id} value={m.id}>
+            <option key={m.id} value={m.id} className="bg-brand-surface2">
               {m.name}
             </option>
           ))}
@@ -59,7 +61,7 @@ export default function App() {
       </header>
 
       {merchantId && (
-        <main className="max-w-6xl mx-auto px-6 py-6 space-y-6">
+        <main className="max-w-6xl mx-auto px-6 py-8 space-y-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <div className="space-y-6">
               <BalanceCard key={merchantId} merchantId={merchantId} />

@@ -1,0 +1,17 @@
+# Mirror of pyproject.toml — for tools / CI that expect a requirements.txt.
+# Source of truth is pyproject.toml; keep this in sync.
+
+django~=5.0
+djangorestframework
+django-environ
+psycopg[binary]
+django-q2
+django-cors-headers
+gunicorn
+whitenoise
+
+# Dev / test
+pytest
+pytest-django
+factory-boy
+ruff

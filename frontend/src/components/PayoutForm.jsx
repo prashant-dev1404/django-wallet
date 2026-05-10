@@ -54,12 +54,12 @@ export default function PayoutForm({ merchantId, onPayoutCreated }) {
   }
 
   return (
-    <div className="bg-white rounded-lg border border-gray-200 p-6">
-      <h2 className="text-sm font-medium text-gray-500 mb-4">New Payout</h2>
+    <div className="bg-brand-surface rounded-xl border border-white/[0.08] p-6">
+      <h2 className="text-xs font-medium text-white/40 uppercase tracking-widest mb-5">New Payout</h2>
 
-      <div className="space-y-3">
+      <div className="space-y-4">
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Amount (₹)</label>
+          <label className="block text-xs text-white/50 mb-1.5">Amount (₹)</label>
           <input
             type="number"
             step="0.01"
@@ -67,31 +67,31 @@ export default function PayoutForm({ merchantId, onPayoutCreated }) {
             value={amountRupees}
             onChange={(e) => setAmountRupees(e.target.value)}
             placeholder="10.00"
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm"
+            className="w-full bg-brand-surface2 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white placeholder-white/20 focus:outline-none focus:border-brand-accent transition-colors"
           />
           {amountPaise && amountPaise > 0 && (
-            <p className="text-xs text-gray-400 mt-1">{amountPaise} paise</p>
+            <p className="text-xs text-white/25 mt-1">{amountPaise} paise</p>
           )}
         </div>
 
         <div>
-          <label className="block text-xs text-gray-600 mb-1">Bank Account</label>
+          <label className="block text-xs text-white/50 mb-1.5">Bank Account</label>
           <select
             value={bankAccountId}
             onChange={(e) => setBankAccountId(e.target.value)}
-            className="w-full border border-gray-300 rounded px-3 py-2 text-sm bg-white"
+            className="w-full bg-brand-surface2 border border-white/[0.08] rounded-lg px-3 py-2 text-sm text-white focus:outline-none focus:border-brand-accent transition-colors"
           >
             {bankAccounts.map((ba) => (
-              <option key={ba.id} value={ba.id}>
+              <option key={ba.id} value={ba.id} className="bg-brand-surface2">
                 {ba.account_number_masked} — {ba.account_holder_name}
               </option>
             ))}
           </select>
         </div>
 
-        {error && <p className="text-xs text-red-600">{error}</p>}
+        {error && <p className="text-xs text-red-400">{error}</p>}
         {success && (
-          <p className="text-xs text-green-600">
+          <p className="text-xs text-green-400">
             Payout created: {success.id} (status: {success.status})
           </p>
         )}
@@ -99,7 +99,7 @@ export default function PayoutForm({ merchantId, onPayoutCreated }) {
         <button
           onClick={handleSubmit}
           disabled={submitting}
-          className="w-full bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 text-white text-sm font-medium rounded px-4 py-2"
+          className="w-full bg-brand-accent hover:bg-brand-accent-hover disabled:opacity-40 text-white text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
         >
           {submitting ? 'Submitting…' : 'Request Payout'}
         </button>
