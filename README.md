@@ -1,6 +1,6 @@
-# Playto Pay — Payout Engine
+# Django — Payout Engine
 
-A production-grade payout engine built for the Playto Founding Engineer Challenge. Indian merchants accumulate balance from customer payments and withdraw to bank accounts. The system handles money integrity, concurrent requests, idempotency, and state-machine-driven payout processing.
+A production-grade payout engine Indian merchants accumulate balance from customer payments and withdraw to bank accounts. The system handles money integrity, concurrent requests, idempotency, and state-machine-driven payout processing.
 
 ---
 
